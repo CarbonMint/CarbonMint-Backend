@@ -30,19 +30,27 @@ All endpoints are namespaced under `/api`.
 | Method | Path                     | Description                                  |
 | ------ | ------------------------ | -------------------------------------------- |
 | GET    | `/api/health`            | Liveness and runtime metadata                |
+| GET    | `/api/health/live`       | Liveness probe (process up)                  |
+| GET    | `/api/health/ready`      | Readiness probe (store seeded)               |
 | GET    | `/api/version`           | Build/runtime version metadata               |
 | GET    | `/api/projects`          | List carbon projects                         |
+| GET    | `/api/projects/top`      | Top projects ranked by credits minted        |
 | GET    | `/api/projects/:id`      | Project metadata plus credit stats           |
 | GET    | `/api/batches`           | List minted credit batches (paginated)       |
 | GET    | `/api/batches/:id`       | Single batch detail                          |
 | POST   | `/api/batches`           | Mint a new credit batch                      |
 | GET    | `/api/listings`          | Batches currently for sale                   |
+| GET    | `/api/market/stats`      | Aggregate listing/price statistics           |
 | POST   | `/api/buy`               | Buy credits from a listing                   |
 | POST   | `/api/retire`            | Retire (burn) credits, issue a certificate   |
-| GET    | `/api/certificates`      | List retirement certificates                 |
+| GET    | `/api/certificates`      | List certificates (filter by `user`/`projectId`) |
 | GET    | `/api/certificates/:id`  | Single certificate detail                    |
 | GET    | `/api/holdings?user=`    | A user's credit holdings                     |
+| GET    | `/api/holdings/summary?user=` | Holdings aggregated by project          |
 | GET    | `/api/registry`          | Aggregate supply analytics                   |
+
+List endpoints accept filters: `/api/batches` supports `projectId`, `vintage`
+and `status`; `/api/listings` supports `projectId`.
 
 ### Example requests
 
@@ -110,7 +118,15 @@ Configuration is read from environment variables (see `.env.example`):
 | `NODE_ENV`         | `development` | Runtime environment                          |
 | `LOG_LEVEL`        | `info`      | `error` \| `warn` \| `info` \| `debug`         |
 | `CORS_ORIGIN`      | `*`         | Comma-separated allowlist of origins           |
+| `JSON_BODY_LIMIT`  | `100kb`     | Maximum accepted JSON request body size        |
+| `REQUEST_TIMEOUT_MS` | `15000`   | Per-request timeout in ms (`0` disables)       |
 | `PLATFORM_FEE_BPS` | `150`       | Marketplace platform fee in basis points       |
+
+### Security headers
+
+Responses include conservative security headers (`X-Content-Type-Options`,
+`X-Frame-Options`, `Referrer-Policy`, a strict `Content-Security-Policy`) and the
+`X-Powered-By` banner is removed.
 
 ## Tests
 
