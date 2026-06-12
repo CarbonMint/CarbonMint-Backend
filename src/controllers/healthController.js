@@ -1,6 +1,7 @@
 'use strict';
 
 const config = require('../config');
+const { counts } = require('../store');
 
 /**
  * Health controller. Reports liveness plus a little build/runtime metadata
@@ -13,6 +14,7 @@ function getHealth(_req, res) {
     env: config.env,
     network: config.stellar.network,
     uptime: process.uptime(),
+    store: counts(),
     timestamp: new Date().toISOString(),
   });
 }
