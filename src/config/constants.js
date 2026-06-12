@@ -17,6 +17,20 @@ const BATCH_STATUS = {
   RETIRED: 'retired',
 };
 
+// Recognized carbon-credit registries / standards that back a project.
+const REGISTRY_STANDARDS = [
+  'Verra',
+  'Gold Standard',
+  'American Carbon Registry',
+  'Climate Action Reserve',
+  'Puro.earth',
+];
+
+// Plausible vintage year bounds for a credit batch. A vintage is the calendar
+// year in which the emission reduction occurred.
+const MIN_VINTAGE = 2000;
+const MAX_VINTAGE = 2100;
+
 // One carbon credit represents one tonne of CO2 equivalent.
 const TONNES_CO2E_PER_CREDIT = 1;
 
@@ -32,6 +46,9 @@ const MAX_PRICE_PER_CREDIT = 1_000_000;
 module.exports = {
   PROJECT_TYPES,
   BATCH_STATUS,
+  REGISTRY_STANDARDS,
+  MIN_VINTAGE,
+  MAX_VINTAGE,
   TONNES_CO2E_PER_CREDIT,
   CURRENCY,
   MAX_BATCH_QUANTITY,
