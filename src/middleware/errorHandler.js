@@ -9,7 +9,9 @@ const logger = require('../utils/logger');
  */
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, _next) {
-  const statusCode = err.statusCode || 500;
+  // Honor both ApiError's statusCode and the `status` set by Express/body-parser
+  // errors (e.g. PayloadTooLargeError -> 413) so they surface with the right code.
+  const statusCode = err.statusCode || err.status || 500;
 
   if (statusCode >= 500) {
     logger.error('Unhandled error:', err.message, err.stack);

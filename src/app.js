@@ -27,7 +27,9 @@ function createApp() {
   app.disable('x-powered-by');
   app.use(securityHeaders);
   app.use(cors(corsOptions));
-  app.use(express.json());
+  // Cap request bodies to guard against oversized/abusive payloads. Express
+  // raises a 413 PayloadTooLargeError, surfaced by the error handler.
+  app.use(express.json({ limit: config.jsonBodyLimit }));
   app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
   app.use(requestId);
   app.use(requestTimeout(config.requestTimeoutMs));
