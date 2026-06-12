@@ -3,8 +3,8 @@
 const marketService = require('../services/marketService');
 
 /** GET /api/listings */
-function listListings(_req, res) {
-  const listings = marketService.listListings();
+function listListings(req, res) {
+  const listings = marketService.listListings({ projectId: req.query.projectId });
   res.json({ count: listings.length, listings });
 }
 

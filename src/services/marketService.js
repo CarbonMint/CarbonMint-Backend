@@ -12,10 +12,11 @@ const holdingsService = require('./holdingsService');
  * Market service. Handles the marketplace surface: which batches are listed
  * for sale and the buy flow that transfers credits between users.
  */
-function listListings() {
+function listListings(filter = {}) {
   return batchService
     .listBatches()
     .filter((b) => b.forSale && b.available > 0)
+    .filter((b) => (filter.projectId ? b.projectId === filter.projectId : true))
     .map((b) => ({
       batchId: b.id,
       projectId: b.projectId,
