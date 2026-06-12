@@ -30,6 +30,13 @@ function getBatch(id) {
 function mintBatch({ projectId, quantity, vintage, owner, pricePerCredit }) {
   const project = projectService.getProject(projectId);
 
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    throw ApiError.badRequest('quantity must be a positive integer');
+  }
+  if (pricePerCredit != null && pricePerCredit < 0) {
+    throw ApiError.badRequest('pricePerCredit cannot be negative');
+  }
+
   const id = prefixedId('batch');
   const onChain = stellarService.mintCredits(id, quantity);
 
