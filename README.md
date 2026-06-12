@@ -69,6 +69,25 @@ curl -X POST http://localhost:4000/api/retire \
   -d '{"batchId":"batch_seed_amazon_2022","user":"alice","quantity":5,"beneficiary":"Acme Corp"}'
 ```
 
+## Project structure
+
+```
+index.js                 # HTTP server bootstrap (seed + listen)
+src/
+  app.js                 # Express app factory (middleware + routes)
+  config/                # Configuration and domain constants
+  middleware/            # requestLogger, validate, notFound, errorHandler
+  routes/                # Express routers, aggregated in routes/index.js
+  controllers/           # Thin HTTP layer, delegates to services
+  services/              # Business logic (projects, batches, market, retire)
+  store/                 # In-memory store and seed data
+  utils/                 # logger, ids, money, ApiError, asyncHandler
+```
+
+The request flow is: route -> validate middleware -> controller -> service ->
+in-memory store. The `stellarService` mocks all on-chain mint/transfer/burn
+operations and returns deterministic transaction metadata.
+
 ## License
 
 MIT
