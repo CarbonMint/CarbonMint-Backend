@@ -44,4 +44,22 @@ function getProjectStats(id) {
   return { minted, retired, available, batchCount };
 }
 
-module.exports = { listProjects, getProject, projectExists, getProjectStats };
+/**
+ * Rank projects by total credits minted across their batches, descending.
+ * Returns each project with its aggregated stats, capped at `limit` entries.
+ */
+function topProjects(limit = 5) {
+  const safeLimit = Number.isInteger(limit) && limit > 0 ? limit : 5;
+  return listProjects()
+    .map((project) => ({ project, stats: getProjectStats(project.id) }))
+    .sort((a, b) => b.stats.minted - a.stats.minted)
+    .slice(0, safeLimit);
+}
+
+module.exports = {
+  listProjects,
+  getProject,
+  projectExists,
+  getProjectStats,
+  topProjects,
+};
