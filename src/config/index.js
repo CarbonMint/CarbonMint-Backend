@@ -11,6 +11,12 @@ const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT, 10) || 4000,
   logLevel: process.env.LOG_LEVEL || 'info',
+  // Comma-separated allowlist of origins. '*' (default) allows any origin,
+  // which is convenient in development but should be tightened in production.
+  corsOrigins: (process.env.CORS_ORIGIN || '*')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean),
   stellar: {
     network: process.env.STELLAR_NETWORK || 'testnet',
     horizonUrl:

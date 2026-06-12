@@ -19,7 +19,10 @@ const errorHandler = require('./middleware/errorHandler');
 function createApp() {
   const app = express();
 
-  app.use(cors());
+  const corsOptions = config.corsOrigins.includes('*')
+    ? {}
+    : { origin: config.corsOrigins };
+  app.use(cors(corsOptions));
   app.use(express.json());
   app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
   app.use(requestId);
