@@ -4,13 +4,14 @@ const express = require('express');
 const retirementController = require('../controllers/retirementController');
 const validate = require('../middleware/validate');
 const asyncHandler = require('../utils/asyncHandler');
+const { MAX_BATCH_QUANTITY } = require('../config/constants');
 
 const router = express.Router();
 
 const retireSchema = {
   batchId: { type: 'string', required: true },
   user: { type: 'string', required: true },
-  quantity: { type: 'integer', required: true, min: 1 },
+  quantity: { type: 'integer', required: true, min: 1, max: MAX_BATCH_QUANTITY },
   beneficiary: { type: 'string', required: false },
   reason: { type: 'string', required: false },
 };

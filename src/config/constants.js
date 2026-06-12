@@ -22,9 +22,18 @@ const TONNES_CO2E_PER_CREDIT = 1;
 
 const CURRENCY = 'USDC';
 
+// Upper bound on credits moved in a single mint/buy/retire request. Guards
+// against fat-finger inputs and absurd numbers overflowing the in-memory math.
+const MAX_BATCH_QUANTITY = 1_000_000;
+
+// Highest price (in USDC) a single credit may be listed at.
+const MAX_PRICE_PER_CREDIT = 1_000_000;
+
 module.exports = {
   PROJECT_TYPES,
   BATCH_STATUS,
   TONNES_CO2E_PER_CREDIT,
   CURRENCY,
+  MAX_BATCH_QUANTITY,
+  MAX_PRICE_PER_CREDIT,
 };
