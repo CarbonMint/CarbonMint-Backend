@@ -3,6 +3,7 @@
 const express = require('express');
 
 const healthRoutes = require('./healthRoutes');
+const versionRoutes = require('./versionRoutes');
 const projectRoutes = require('./projectRoutes');
 const batchRoutes = require('./batchRoutes');
 const marketRoutes = require('./marketRoutes');
@@ -18,6 +19,7 @@ const router = express.Router();
  * /certificates) so they are mounted at the api root.
  */
 router.use('/health', healthRoutes);
+router.use('/version', versionRoutes);
 router.use('/projects', projectRoutes);
 router.use('/batches', batchRoutes);
 router.use('/holdings', holdingsRoutes);
