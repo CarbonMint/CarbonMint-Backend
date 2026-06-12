@@ -11,7 +11,8 @@ function listProjects(_req, res) {
 /** GET /api/projects/:id */
 function getProject(req, res) {
   const project = projectService.getProject(req.params.id);
-  res.json({ project });
+  const stats = projectService.getProjectStats(req.params.id);
+  res.json({ project, stats });
 }
 
 module.exports = { listProjects, getProject };
