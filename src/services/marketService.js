@@ -1,6 +1,7 @@
 'use strict';
 
 const config = require('../config');
+const { BATCH_STATUS } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const money = require('../utils/money');
 const batchService = require('./batchService');
@@ -58,6 +59,7 @@ function buy({ batchId, buyer, quantity }) {
 
   if (batch.available === 0) {
     batch.forSale = false;
+    batch.status = BATCH_STATUS.SOLD_OUT;
   }
 
   return {
