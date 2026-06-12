@@ -1,6 +1,8 @@
 'use strict';
 
 const { TONNES_CO2E_PER_CREDIT } = require('../config/constants');
+const { aggregateSupply, retirementRate } = require('../utils/supply');
+const { round2 } = require('../utils/money');
 const batchService = require('./batchService');
 const retirementService = require('./retirementService');
 
@@ -11,15 +13,11 @@ const retirementService = require('./retirementService');
 function getRegistryStats() {
   const batches = batchService.listBatches();
 
-  let totalMinted = 0;
-  let totalRetired = 0;
-  let activeSupply = 0;
-
-  for (const batch of batches) {
-    totalMinted += batch.quantity;
-    totalRetired += batch.retired;
-    activeSupply += batch.available;
-  }
+  const {
+    minted: totalMinted,
+    retired: totalRetired,
+    available: activeSupply,
+  } = aggregateSupply(batches);
 
   const certificates = retirementService.listCertificates();
 
@@ -28,6 +26,7 @@ function getRegistryStats() {
     totalRetired,
     activeSupply,
     tonnesCo2eRetired: totalRetired * TONNES_CO2E_PER_CREDIT,
+    retirementRate: round2(retirementRate(totalMinted, totalRetired) * 100),
     batchCount: batches.length,
     certificateCount: certificates.length,
     generatedAt: new Date().toISOString(),
