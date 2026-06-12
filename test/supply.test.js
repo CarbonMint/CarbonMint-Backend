@@ -3,7 +3,11 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { aggregateSupply, retirementRate } = require('../src/utils/supply');
+const {
+  aggregateSupply,
+  retirementRate,
+  projectRetirement,
+} = require('../src/utils/supply');
 
 test('aggregateSupply sums minted, retired and available across batches', () => {
   const batches = [
@@ -31,4 +35,28 @@ test('retirementRate computes the retired fraction', () => {
 
 test('retirementRate returns 0 when nothing has been minted', () => {
   assert.equal(retirementRate(0, 0), 0);
+});
+
+test('projectRetirement projects the post-retirement supply state', () => {
+  assert.deepEqual(projectRetirement(1000, 200, 300), {
+    projectedRetired: 500,
+    remaining: 500,
+    projectedRate: 0.5,
+  });
+});
+
+test('projectRetirement clamps retired to never exceed minted', () => {
+  assert.deepEqual(projectRetirement(1000, 900, 500), {
+    projectedRetired: 1000,
+    remaining: 0,
+    projectedRate: 1,
+  });
+});
+
+test('projectRetirement treats negative and invalid amounts as zero', () => {
+  assert.deepEqual(projectRetirement(1000, 200, -50), {
+    projectedRetired: 200,
+    remaining: 800,
+    projectedRate: 0.2,
+  });
 });
