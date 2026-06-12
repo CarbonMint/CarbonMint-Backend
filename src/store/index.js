@@ -22,4 +22,14 @@ function reset() {
   store.holdings.clear();
 }
 
-module.exports = { store, reset };
+/** Snapshot of collection sizes, handy for health checks and diagnostics. */
+function counts() {
+  return {
+    projects: store.projects.size,
+    batches: store.batches.size,
+    certificates: store.certificates.size,
+    accounts: store.holdings.size,
+  };
+}
+
+module.exports = { store, reset, counts };
