@@ -21,6 +21,7 @@ function errorHandler(err, req, res, _next) {
     error: {
       message: err.message || 'Internal Server Error',
       status: statusCode,
+      code: err.code || (statusCode >= 500 ? 'INTERNAL_ERROR' : 'ERROR'),
       details: err.details,
     },
   });
