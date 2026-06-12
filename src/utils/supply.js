@@ -30,4 +30,20 @@ function retirementRate(minted, retired) {
   return retired / minted;
 }
 
-module.exports = { aggregateSupply, retirementRate };
+/**
+ * Project the supply state after retiring `amount` more credits, given the
+ * current minted/retired totals. Clamps so retired never exceeds minted and
+ * the result is internally consistent (retired + remaining == minted).
+ */
+function projectRetirement(minted, retired, amount) {
+  const safeAmount = Math.max(0, Number(amount) || 0);
+  const projectedRetired = Math.min(minted, retired + safeAmount);
+  const remaining = minted - projectedRetired;
+  return {
+    projectedRetired,
+    remaining,
+    projectedRate: retirementRate(minted, projectedRetired),
+  };
+}
+
+module.exports = { aggregateSupply, retirementRate, projectRetirement };
