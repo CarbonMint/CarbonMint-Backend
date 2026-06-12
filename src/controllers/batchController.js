@@ -1,11 +1,13 @@
 'use strict';
 
 const batchService = require('../services/batchService');
+const { paginate } = require('../utils/pagination');
 
-/** GET /api/batches */
-function listBatches(_req, res) {
-  const batches = batchService.listBatches();
-  res.json({ count: batches.length, batches });
+/** GET /api/batches?page=&limit= */
+function listBatches(req, res) {
+  const all = batchService.listBatches();
+  const { data, pagination } = paginate(all, req.query);
+  res.json({ count: data.length, pagination, batches: data });
 }
 
 /** GET /api/batches/:id */
