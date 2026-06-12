@@ -6,6 +6,7 @@ const morgan = require('morgan');
 
 const config = require('./config');
 const apiRoutes = require('./routes');
+const securityHeaders = require('./middleware/securityHeaders');
 const requestId = require('./middleware/requestId');
 const requestLogger = require('./middleware/requestLogger');
 const notFound = require('./middleware/notFound');
@@ -22,6 +23,8 @@ function createApp() {
   const corsOptions = config.corsOrigins.includes('*')
     ? {}
     : { origin: config.corsOrigins };
+  app.disable('x-powered-by');
+  app.use(securityHeaders);
   app.use(cors(corsOptions));
   app.use(express.json());
   app.use(morgan(config.env === 'development' ? 'dev' : 'combined'));
