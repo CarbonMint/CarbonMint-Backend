@@ -36,7 +36,7 @@ function getLiveness(_req, res) {
 function getReadiness(_req, res) {
   const store = counts();
   if (store.projects === 0) {
-    throw new ApiError(503, 'Store not seeded', undefined, 'NOT_READY');
+    throw ApiError.serviceUnavailable('Store not seeded');
   }
   res.json({ status: 'ready', store });
 }

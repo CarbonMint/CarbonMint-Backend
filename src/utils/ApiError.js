@@ -14,7 +14,10 @@ const DEFAULT_CODES = {
   403: 'FORBIDDEN',
   404: 'NOT_FOUND',
   409: 'CONFLICT',
+  413: 'PAYLOAD_TOO_LARGE',
   422: 'UNPROCESSABLE_ENTITY',
+  429: 'TOO_MANY_REQUESTS',
+  503: 'SERVICE_UNAVAILABLE',
 };
 
 class ApiError extends Error {
@@ -50,6 +53,18 @@ class ApiError extends Error {
 
   static unprocessable(message, details) {
     return new ApiError(422, message, details);
+  }
+
+  static payloadTooLarge(message = 'Payload too large') {
+    return new ApiError(413, message);
+  }
+
+  static tooManyRequests(message = 'Too many requests') {
+    return new ApiError(429, message);
+  }
+
+  static serviceUnavailable(message = 'Service unavailable') {
+    return new ApiError(503, message);
   }
 }
 
