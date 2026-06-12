@@ -15,9 +15,12 @@ function retire(req, res) {
   res.status(201).json({ certificate });
 }
 
-/** GET /api/certificates */
-function listCertificates(_req, res) {
-  const certificates = retirementService.listCertificates();
+/** GET /api/certificates?user=&projectId= */
+function listCertificates(req, res) {
+  const certificates = retirementService.listCertificates({
+    user: req.query.user,
+    projectId: req.query.projectId,
+  });
   res.json({ count: certificates.length, certificates });
 }
 

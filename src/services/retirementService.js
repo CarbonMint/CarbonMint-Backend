@@ -13,8 +13,15 @@ const holdingsService = require('./holdingsService');
  * longer be traded, and issues a retirement certificate as proof of the
  * climate claim.
  */
-function listCertificates() {
-  return Array.from(store.certificates.values());
+function listCertificates(filter = {}) {
+  let certificates = Array.from(store.certificates.values());
+  if (filter.user) {
+    certificates = certificates.filter((c) => c.retiredBy === filter.user);
+  }
+  if (filter.projectId) {
+    certificates = certificates.filter((c) => c.projectId === filter.projectId);
+  }
+  return certificates;
 }
 
 function getCertificate(id) {
