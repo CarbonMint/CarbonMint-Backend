@@ -1,6 +1,7 @@
 'use strict';
 
 const { store } = require('../store');
+const { MIN_VINTAGE, MAX_VINTAGE } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { prefixedId } = require('../utils/ids');
 const projectService = require('./projectService');
@@ -45,6 +46,15 @@ function mintBatch({ projectId, quantity, vintage, owner, pricePerCredit }) {
   }
   if (pricePerCredit != null && pricePerCredit < 0) {
     throw ApiError.badRequest('pricePerCredit cannot be negative');
+  }
+  if (
+    !Number.isInteger(vintage) ||
+    vintage < MIN_VINTAGE ||
+    vintage > MAX_VINTAGE
+  ) {
+    throw ApiError.badRequest(
+      `vintage must be an integer between ${MIN_VINTAGE} and ${MAX_VINTAGE}`
+    );
   }
 
   const id = prefixedId('batch');
