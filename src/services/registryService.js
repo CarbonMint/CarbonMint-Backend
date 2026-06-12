@@ -1,5 +1,6 @@
 'use strict';
 
+const { TONNES_CO2E_PER_CREDIT } = require('../config/constants');
 const batchService = require('./batchService');
 const retirementService = require('./retirementService');
 
@@ -26,6 +27,7 @@ function getRegistryStats() {
     totalMinted,
     totalRetired,
     activeSupply,
+    tonnesCo2eRetired: totalRetired * TONNES_CO2E_PER_CREDIT,
     batchCount: batches.length,
     certificateCount: certificates.length,
     generatedAt: new Date().toISOString(),
