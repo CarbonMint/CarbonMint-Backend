@@ -38,6 +38,26 @@ const SEED_PROJECTS = [
     description:
       'Distribution of efficient cookstoves reducing firewood demand and emissions.',
   },
+  {
+    id: 'proj_mangrove_id',
+    name: 'Indonesia Mangrove Blue Carbon',
+    type: 'blue-carbon',
+    country: 'Indonesia',
+    registry: 'Verra',
+    methodology: 'VM0033',
+    description:
+      'Restoration and protection of coastal mangrove ecosystems sequestering blue carbon.',
+  },
+  {
+    id: 'proj_dac_is',
+    name: 'Iceland Direct Air Capture',
+    type: 'direct-air-capture',
+    country: 'Iceland',
+    registry: 'Puro.earth',
+    methodology: 'Puro-DAC',
+    description:
+      'Geologic mineralization of CO2 captured directly from ambient air using geothermal power.',
+  },
 ];
 
 const SEED_BATCHES = [
@@ -64,6 +84,22 @@ const SEED_BATCHES = [
     vintage: 2023,
     owner: 'issuer_kenya',
     pricePerCredit: 15.0,
+  },
+  {
+    id: 'batch_seed_mangrove_2022',
+    projectId: 'proj_mangrove_id',
+    quantity: 8000,
+    vintage: 2022,
+    owner: 'issuer_mangrove',
+    pricePerCredit: 18.25,
+  },
+  {
+    id: 'batch_seed_dac_2024',
+    projectId: 'proj_dac_is',
+    quantity: 1500,
+    vintage: 2024,
+    owner: 'issuer_dac',
+    pricePerCredit: 320.0,
   },
 ];
 
