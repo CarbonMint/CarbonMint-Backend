@@ -1,6 +1,7 @@
 'use strict';
 
 const { store } = require('../store');
+const { BATCH_STATUS } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const { prefixedId } = require('../utils/ids');
 const batchService = require('./batchService');
@@ -46,6 +47,8 @@ function retire({ batchId, user, quantity, beneficiary, reason }) {
   batch.retired += quantity;
   if (batch.available === 0) {
     batch.forSale = false;
+    batch.status =
+      batch.retired === batch.quantity ? BATCH_STATUS.RETIRED : BATCH_STATUS.SOLD_OUT;
   }
 
   const id = prefixedId('cert');
