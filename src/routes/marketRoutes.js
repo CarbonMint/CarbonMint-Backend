@@ -17,6 +17,9 @@ const buySchema = {
 // GET /api/listings
 router.get('/listings', asyncHandler(marketController.listListings));
 
+// GET /api/market/stats
+router.get('/market/stats', asyncHandler(marketController.getMarketStats));
+
 // POST /api/buy
 router.post('/buy', validate(buySchema), asyncHandler(marketController.buy));
 

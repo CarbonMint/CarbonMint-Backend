@@ -19,4 +19,10 @@ function buy(req, res) {
   res.status(201).json({ receipt });
 }
 
-module.exports = { listListings, buy };
+/** GET /api/market/stats */
+function getMarketStats(_req, res) {
+  const stats = marketService.getMarketStats();
+  res.json({ market: stats });
+}
+
+module.exports = { listListings, buy, getMarketStats };

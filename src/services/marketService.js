@@ -4,6 +4,7 @@ const config = require('../config');
 const { BATCH_STATUS } = require('../config/constants');
 const ApiError = require('../utils/ApiError');
 const money = require('../utils/money');
+const stats = require('../utils/stats');
 const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
@@ -78,4 +79,28 @@ function buy({ batchId, buyer, quantity }) {
   };
 }
 
-module.exports = { listListings, buy };
+/**
+ * Aggregate marketplace statistics over the currently active listings: how
+ * many credits are available, their notional value and a price distribution
+ * summary. Useful for dashboards and price discovery.
+ */
+function getMarketStats() {
+  const listings = listListings();
+  const prices = listings.map((l) => l.pricePerCredit);
+  const creditsForSale = listings.reduce((sum, l) => sum + l.available, 0);
+  const notionalValue = listings.reduce(
+    (sum, l) => money.round2(sum + money.multiply(l.pricePerCredit, l.available)),
+    0
+  );
+
+  return {
+    listingCount: listings.length,
+    creditsForSale,
+    notionalValue,
+    currency: 'USDC',
+    price: stats.summarize(prices),
+    generatedAt: new Date().toISOString(),
+  };
+}
+
+module.exports = { listListings, buy, getMarketStats };
