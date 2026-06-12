@@ -20,6 +20,8 @@ const config = {
   // Maximum accepted JSON request body size. Accepts any value the body-parser
   // understands (e.g. '100kb', '1mb').
   jsonBodyLimit: process.env.JSON_BODY_LIMIT || '100kb',
+  // Per-request timeout in milliseconds. Set to 0 to disable.
+  requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS, 10) || 15000,
   stellar: {
     network: process.env.STELLAR_NETWORK || 'testnet',
     horizonUrl:
