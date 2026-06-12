@@ -3,9 +3,14 @@
 const batchService = require('../services/batchService');
 const { paginate } = require('../utils/pagination');
 
-/** GET /api/batches?page=&limit= */
+/** GET /api/batches?projectId=&vintage=&status=&page=&limit= */
 function listBatches(req, res) {
-  const all = batchService.listBatches();
+  const filter = {
+    projectId: req.query.projectId,
+    status: req.query.status,
+    vintage: req.query.vintage != null ? Number(req.query.vintage) : undefined,
+  };
+  const all = batchService.listBatches(filter);
   const { data, pagination } = paginate(all, req.query);
   res.json({ count: data.length, pagination, batches: data });
 }

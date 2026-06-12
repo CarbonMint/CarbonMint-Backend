@@ -11,8 +11,18 @@ const holdingsService = require('./holdingsService');
  * Batch service. A batch represents a tokenized quantity of carbon credits
  * minted against a verified project. Each credit equals one tonne of CO2e.
  */
-function listBatches() {
-  return Array.from(store.batches.values());
+function listBatches(filter = {}) {
+  let batches = Array.from(store.batches.values());
+  if (filter.projectId) {
+    batches = batches.filter((b) => b.projectId === filter.projectId);
+  }
+  if (filter.vintage != null) {
+    batches = batches.filter((b) => b.vintage === filter.vintage);
+  }
+  if (filter.status) {
+    batches = batches.filter((b) => b.status === filter.status);
+  }
+  return batches;
 }
 
 function getBatch(id) {
