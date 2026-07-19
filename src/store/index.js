@@ -13,6 +13,8 @@ const store = {
   certificates: new Map(),
   // holdings: user => Map(batchId => quantity)
   holdings: new Map(),
+  // users: userId => { id, role }  (used by RBAC authenticate middleware)
+  users: new Map(),
 };
 
 function reset() {
@@ -20,6 +22,7 @@ function reset() {
   store.batches.clear();
   store.certificates.clear();
   store.holdings.clear();
+  store.users.clear();
 }
 
 /** Snapshot of collection sizes, handy for health checks and diagnostics. */

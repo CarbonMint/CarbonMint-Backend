@@ -3,8 +3,11 @@
 const express = require('express');
 const retirementController = require('../controllers/retirementController');
 const validate = require('../middleware/validate');
+const authenticate = require('../middleware/authenticate');
+const requireRole = require('../middleware/requireRole');
 const asyncHandler = require('../utils/asyncHandler');
 const { MAX_BATCH_QUANTITY } = require('../config/constants');
+const { TRADE_ROLES } = require('../config/roles');
 
 const router = express.Router();
 
@@ -16,13 +19,19 @@ const retireSchema = {
   reason: { type: 'string', required: false },
 };
 
-// POST /api/retire
-router.post('/retire', validate(retireSchema), asyncHandler(retirementController.retire));
+// POST /api/retire – retire (burn) credits; any authenticated user (buyer, issuer, admin)
+router.post(
+  '/retire',
+  authenticate,
+  requireRole(...TRADE_ROLES),
+  validate(retireSchema),
+  asyncHandler(retirementController.retire)
+);
 
-// GET /api/certificates
+// GET /api/certificates – public read (anyone can verify certificates)
 router.get('/certificates', asyncHandler(retirementController.listCertificates));
 
-// GET /api/certificates/:id
+// GET /api/certificates/:id – public read
 router.get('/certificates/:id', asyncHandler(retirementController.getCertificate));
 
 module.exports = router;
