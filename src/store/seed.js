@@ -5,9 +5,25 @@ const logger = require('../utils/logger');
 const holdingsService = require('../services/holdingsService');
 
 /**
- * Seed the in-memory store with a small set of demo projects and batches so
- * the API returns meaningful data immediately on boot.
+ * Seed the in-memory store with a small set of demo projects, batches, and
+ * users so the API returns meaningful data immediately on boot.
  */
+
+// ---------------------------------------------------------------------------
+// Demo users – used by the RBAC authenticate middleware to validate
+// X-User-Id / X-User-Role header pairs.
+// ---------------------------------------------------------------------------
+const SEED_USERS = [
+  { id: 'admin_platform', role: 'admin' },
+  { id: 'issuer_amazon', role: 'issuer' },
+  { id: 'issuer_solar', role: 'issuer' },
+  { id: 'issuer_kenya', role: 'issuer' },
+  { id: 'issuer_mangrove', role: 'issuer' },
+  { id: 'issuer_dac', role: 'issuer' },
+  { id: 'buyer_alice', role: 'buyer' },
+  { id: 'buyer_bob', role: 'buyer' },
+];
+
 const SEED_PROJECTS = [
   {
     id: 'proj_amazon',
@@ -104,6 +120,10 @@ const SEED_BATCHES = [
 ];
 
 function seed() {
+  for (const user of SEED_USERS) {
+    store.users.set(user.id, { ...user });
+  }
+
   for (const project of SEED_PROJECTS) {
     store.projects.set(project.id, { ...project, createdAt: new Date().toISOString() });
   }
@@ -130,8 +150,8 @@ function seed() {
   }
 
   logger.info(
-    `Seeded ${store.projects.size} projects and ${store.batches.size} batches`
+    `Seeded ${store.users.size} users, ${store.projects.size} projects and ${store.batches.size} batches`
   );
 }
 
-module.exports = { seed, SEED_PROJECTS, SEED_BATCHES };
+module.exports = { seed, SEED_USERS, SEED_PROJECTS, SEED_BATCHES };

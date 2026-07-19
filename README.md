@@ -27,27 +27,27 @@ The server listens on `PORT` (default `4000`).
 
 All endpoints are namespaced under `/api`.
 
-| Method | Path                     | Description                                  |
-| ------ | ------------------------ | -------------------------------------------- |
-| GET    | `/api/health`            | Liveness and runtime metadata                |
-| GET    | `/api/health/live`       | Liveness probe (process up)                  |
-| GET    | `/api/health/ready`      | Readiness probe (store seeded)               |
-| GET    | `/api/version`           | Build/runtime version metadata               |
-| GET    | `/api/projects`          | List carbon projects                         |
-| GET    | `/api/projects/top`      | Top projects ranked by credits minted        |
-| GET    | `/api/projects/:id`      | Project metadata plus credit stats           |
-| GET    | `/api/batches`           | List minted credit batches (paginated)       |
-| GET    | `/api/batches/:id`       | Single batch detail                          |
-| POST   | `/api/batches`           | Mint a new credit batch                      |
-| GET    | `/api/listings`          | Batches currently for sale                   |
-| GET    | `/api/market/stats`      | Aggregate listing/price statistics           |
-| POST   | `/api/buy`               | Buy credits from a listing                   |
-| POST   | `/api/retire`            | Retire (burn) credits, issue a certificate   |
-| GET    | `/api/certificates`      | List certificates (filter by `user`/`projectId`) |
-| GET    | `/api/certificates/:id`  | Single certificate detail                    |
-| GET    | `/api/holdings?user=`    | A user's credit holdings                     |
-| GET    | `/api/holdings/summary?user=` | Holdings aggregated by project          |
-| GET    | `/api/registry`          | Aggregate supply analytics                   |
+| Method | Path                     | Auth required | Description                                  |
+| ------ | ------------------------ | ------------- | -------------------------------------------- |
+| GET    | `/api/health`            | –             | Liveness and runtime metadata                |
+| GET    | `/api/health/live`       | –             | Liveness probe (process up)                  |
+| GET    | `/api/health/ready`      | –             | Readiness probe (store seeded)               |
+| GET    | `/api/version`           | –             | Build/runtime version metadata               |
+| GET    | `/api/projects`          | –             | List carbon projects                         |
+| GET    | `/api/projects/top`      | –             | Top projects ranked by credits minted        |
+| GET    | `/api/projects/:id`      | –             | Project metadata plus credit stats           |
+| GET    | `/api/batches`           | –             | List minted credit batches (paginated)       |
+| GET    | `/api/batches/:id`       | –             | Single batch detail                          |
+| POST   | `/api/batches`           | `admin`, `issuer` | Mint a new credit batch                 |
+| GET    | `/api/listings`          | –             | Batches currently for sale                   |
+| GET    | `/api/market/stats`      | –             | Aggregate listing/price statistics           |
+| POST   | `/api/buy`               | any role      | Buy credits from a listing                   |
+| POST   | `/api/retire`            | any role      | Retire (burn) credits, issue a certificate   |
+| GET    | `/api/certificates`      | –             | List certificates (filter by `user`/`projectId`) |
+| GET    | `/api/certificates/:id`  | –             | Single certificate detail                    |
+| GET    | `/api/holdings?user=`    | –             | A user's credit holdings                     |
+| GET    | `/api/holdings/summary?user=` | –        | Holdings aggregated by project               |
+| GET    | `/api/registry`          | –             | Aggregate supply analytics                   |
 
 List endpoints accept filters: `/api/batches` supports `projectId`, `vintage`
 and `status`; `/api/listings` supports `projectId`.
@@ -59,6 +59,8 @@ Mint a batch:
 ```bash
 curl -X POST http://localhost:4000/api/batches \
   -H 'Content-Type: application/json' \
+  -H 'X-User-Id: issuer_amazon' \
+  -H 'X-User-Role: issuer' \
   -d '{"projectId":"proj_amazon","quantity":1000,"vintage":2024,"owner":"issuer_amazon","pricePerCredit":11.0}'
 ```
 
@@ -67,7 +69,9 @@ Buy credits:
 ```bash
 curl -X POST http://localhost:4000/api/buy \
   -H 'Content-Type: application/json' \
-  -d '{"batchId":"batch_seed_amazon_2022","buyer":"alice","quantity":10}'
+  -H 'X-User-Id: buyer_alice' \
+  -H 'X-User-Role: buyer' \
+  -d '{"batchId":"batch_seed_amazon_2022","buyer":"buyer_alice","quantity":10}'
 ```
 
 Retire credits:
@@ -75,8 +79,127 @@ Retire credits:
 ```bash
 curl -X POST http://localhost:4000/api/retire \
   -H 'Content-Type: application/json' \
-  -d '{"batchId":"batch_seed_amazon_2022","user":"alice","quantity":5,"beneficiary":"Acme Corp"}'
+  -H 'X-User-Id: buyer_alice' \
+  -H 'X-User-Role: buyer' \
+  -d '{"batchId":"batch_seed_amazon_2022","user":"buyer_alice","quantity":5,"beneficiary":"Acme Corp"}'
 ```
+
+## Role-Based Access Control (RBAC)
+
+### Overview
+
+CarbonMint uses a lightweight, header-based RBAC system. Every write request on
+a protected endpoint must carry two HTTP headers that identify the caller and
+their role. The server validates the headers against the in-memory users store.
+
+```
+X-User-Id:   <user-id>
+X-User-Role: <role>
+```
+
+This approach keeps the system fully in-memory with no external auth service,
+consistent with the project's philosophy.
+
+### Available roles
+
+| Role     | Description                                                         |
+| -------- | ------------------------------------------------------------------- |
+| `admin`  | Platform operator. Can perform any action including minting batches |
+| `issuer` | Verified project owner. Can mint credit batches and trade credits   |
+| `buyer`  | Regular marketplace participant. Can buy and retire credits         |
+
+### Protected endpoints
+
+| Method | Path          | Allowed roles            | Denied roles |
+| ------ | ------------- | ------------------------ | ------------ |
+| POST   | `/api/batches`| `admin`, `issuer`        | `buyer`      |
+| POST   | `/api/buy`    | `admin`, `issuer`, `buyer` | –           |
+| POST   | `/api/retire` | `admin`, `issuer`, `buyer` | –           |
+
+All `GET` endpoints remain public — no authentication is required to read
+projects, batches, listings, certificates, holdings, or registry data.
+
+### HTTP status codes
+
+| Situation                                    | Status | Code            |
+| -------------------------------------------- | ------ | --------------- |
+| Missing or invalid headers                   | `401`  | `UNAUTHORIZED`  |
+| User id not found in store                   | `401`  | `UNAUTHORIZED`  |
+| Header role does not match stored role       | `401`  | `UNAUTHORIZED`  |
+| Authenticated but role is not permitted      | `403`  | `FORBIDDEN`     |
+
+### Authorization flow
+
+```
+Request
+  │
+  ├─ authenticate middleware
+  │    Reads X-User-Id + X-User-Role headers
+  │    Validates against store.users map
+  │    Sets req.user = { id, role }     ──► 401 on any failure
+  │
+  ├─ requireRole(...roles) middleware
+  │    Checks req.user.role is in the allowed list ──► 403 if not permitted
+  │
+  └─ validate middleware → controller → service → store
+```
+
+### Seed users
+
+The following users are seeded on boot for local development and testing:
+
+| User id           | Role     |
+| ----------------- | -------- |
+| `admin_platform`  | `admin`  |
+| `issuer_amazon`   | `issuer` |
+| `issuer_solar`    | `issuer` |
+| `issuer_kenya`    | `issuer` |
+| `issuer_mangrove` | `issuer` |
+| `issuer_dac`      | `issuer` |
+| `buyer_alice`     | `buyer`  |
+| `buyer_bob`       | `buyer`  |
+
+### Example authenticated requests
+
+Mint a batch (issuer):
+
+```bash
+curl -X POST http://localhost:4000/api/batches \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-Id: issuer_amazon' \
+  -H 'X-User-Role: issuer' \
+  -d '{"projectId":"proj_amazon","quantity":500,"vintage":2024,"owner":"issuer_amazon","pricePerCredit":13.0}'
+```
+
+Buy credits (buyer):
+
+```bash
+curl -X POST http://localhost:4000/api/buy \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-Id: buyer_alice' \
+  -H 'X-User-Role: buyer' \
+  -d '{"batchId":"batch_seed_amazon_2022","buyer":"buyer_alice","quantity":10}'
+```
+
+Retire credits (buyer):
+
+```bash
+curl -X POST http://localhost:4000/api/retire \
+  -H 'Content-Type: application/json' \
+  -H 'X-User-Id: buyer_alice' \
+  -H 'X-User-Role: buyer' \
+  -d '{"batchId":"batch_seed_amazon_2022","user":"buyer_alice","quantity":5,"beneficiary":"Acme Corp"}'
+```
+
+### How to add a new role
+
+1. Add the role constant to `src/config/roles.js` under `ROLES`.
+2. Update or create a permission set (`MINT_ROLES`, `TRADE_ROLES`, etc.) to
+   include the new role where appropriate.
+3. Seed at least one user with the new role in `src/store/seed.js`.
+4. Apply `requireRole('new_role', ...)` to any routes the role should access.
+5. Add test cases in `test/rbac.test.js` covering authorized and denied access.
+6. Update this table and the protected endpoints table above.
 
 ## Conventions
 
