@@ -8,6 +8,8 @@ semantic versioning.
 
 ### Added
 
+- Queue-depth metric in `GET /api/health` response (`queue` field) showing
+  batch counts broken down by status (active, sold-out, retired).
 - `GET /api/health/live` and `GET /api/health/ready` liveness/readiness probes.
 - `GET /api/market/stats` with a price distribution summary.
 - `GET /api/projects/top` ranking projects by credits minted.

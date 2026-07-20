@@ -35,4 +35,17 @@ function counts() {
   };
 }
 
-module.exports = { store, reset, counts };
+/**
+ * Queue-depth metric: returns the count of batches broken down by status.
+ * The "active" count represents batches currently in the pipeline
+ * (minted and available for trading or retirement).
+ */
+function queueDepth() {
+  const byStatus = {};
+  for (const batch of store.batches.values()) {
+    byStatus[batch.status] = (byStatus[batch.status] || 0) + 1;
+  }
+  return byStatus;
+}
+
+module.exports = { store, reset, counts, queueDepth };
