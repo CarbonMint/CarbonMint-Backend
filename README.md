@@ -29,7 +29,7 @@ All endpoints are namespaced under `/api`.
 
 | Method | Path                     | Auth required | Description                                  |
 | ------ | ------------------------ | ------------- | -------------------------------------------- |
-| GET    | `/api/health`            | –             | Liveness and runtime metadata                |
+| GET    | `/api/health`            | –             | Liveness, runtime metadata, queue depth      |
 | GET    | `/api/health/live`       | –             | Liveness probe (process up)                  |
 | GET    | `/api/health/ready`      | –             | Readiness probe (store seeded)               |
 | GET    | `/api/version`           | –             | Build/runtime version metadata               |

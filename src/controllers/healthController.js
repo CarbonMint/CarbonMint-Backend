@@ -1,12 +1,13 @@
 'use strict';
 
 const config = require('../config');
-const { counts } = require('../store');
+const { counts, queueDepth } = require('../store');
 const ApiError = require('../utils/ApiError');
 
 /**
  * Health controller. Reports liveness plus a little build/runtime metadata
- * that is handy for uptime checks and smoke tests.
+ * that is handy for uptime checks and smoke tests. Includes queue-depth
+ * breakdown so operators can monitor the processing pipeline at a glance.
  */
 function getHealth(_req, res) {
   res.json({
@@ -16,6 +17,7 @@ function getHealth(_req, res) {
     network: config.stellar.network,
     uptime: process.uptime(),
     store: counts(),
+    queue: queueDepth(),
     timestamp: new Date().toISOString(),
   });
 }
