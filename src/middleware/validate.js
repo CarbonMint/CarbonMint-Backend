@@ -29,26 +29,26 @@ function validate(schema) {
       if (rule.type === 'number' || rule.type === 'integer') {
         const num = Number(value);
         if (Number.isNaN(num)) {
-          errors.push(`${field} must be a number`);
+          errors.push(`${field}: must be a number`);
           continue;
         }
         if (rule.type === 'integer' && !Number.isInteger(num)) {
-          errors.push(`${field} must be an integer`);
+          errors.push(`${field}: must be an integer`);
         }
         if (rule.min !== undefined && num < rule.min) {
-          errors.push(`${field} must be >= ${rule.min}`);
+          errors.push(`${field}: must be >= ${rule.min}`);
         }
         if (rule.max !== undefined && num > rule.max) {
-          errors.push(`${field} must be <= ${rule.max}`);
+          errors.push(`${field}: must be <= ${rule.max}`);
         }
       }
 
       if (rule.type === 'string' && typeof value !== 'string') {
-        errors.push(`${field} must be a string`);
+        errors.push(`${field}: must be a string`);
       }
 
       if (rule.enum && !rule.enum.includes(value)) {
-        errors.push(`${field} must be one of: ${rule.enum.join(', ')}`);
+        errors.push(`${field}: must be one of: ${rule.enum.join(', ')}`);
       }
     }
 

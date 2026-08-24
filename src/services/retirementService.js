@@ -47,7 +47,12 @@ function retire({ batchId, user, quantity, beneficiary, reason }) {
     );
   }
 
-  const onChain = stellarService.burnCredits(batchId, user, quantity);
+  let onChain;
+  try {
+    onChain = stellarService.burnCredits(batchId, user, quantity);
+  } catch (error) {
+    throw ApiError.fromProvider(error);
+  }
 
   holdingsService.debit(user, batchId, quantity);
   batch.available = Math.max(0, batch.available - quantity);

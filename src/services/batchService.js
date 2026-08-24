@@ -58,7 +58,12 @@ function mintBatch({ projectId, quantity, vintage, owner, pricePerCredit }) {
   }
 
   const id = prefixedId('batch');
-  const onChain = stellarService.mintCredits(id, quantity);
+  let onChain;
+  try {
+    onChain = stellarService.mintCredits(id, quantity);
+  } catch (error) {
+    throw ApiError.fromProvider(error);
+  }
 
   const batch = {
     id,
