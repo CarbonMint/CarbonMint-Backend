@@ -7,6 +7,7 @@ const { prefixedId } = require('../utils/ids');
 const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
+const auditService = require('./auditService');
 
 /**
  * Retirement service. Retiring credits permanently burns them so they can no
@@ -37,7 +38,7 @@ function getCertificate(id) {
  * simulates the on-chain burn, updates supply accounting and mints a
  * certificate.
  */
-function retire({ batchId, user, quantity, beneficiary, reason }) {
+function retire({ batchId, user, quantity, beneficiary, reason, actor, correlationId }) {
   const batch = batchService.getBatch(batchId);
   const balance = holdingsService.getBalance(user, batchId);
 
@@ -74,6 +75,13 @@ function retire({ batchId, user, quantity, beneficiary, reason }) {
   };
 
   store.certificates.set(id, certificate);
+  auditService.record({
+    actor,
+    action: 'credits.retire',
+    target: batchId,
+    correlationId,
+    metadata: { certificateId: id, user, quantity, beneficiary, reason, txHash: onChain.txHash },
+  });
   return certificate;
 }
 

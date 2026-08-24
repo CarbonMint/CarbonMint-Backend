@@ -30,6 +30,8 @@ function createBatch(req, res) {
     vintage: Number(vintage),
     owner,
     pricePerCredit: pricePerCredit != null ? Number(pricePerCredit) : null,
+    actor: req.user && req.user.id,
+    correlationId: req.id,
   });
   res.status(201).json({ batch });
 }
