@@ -138,3 +138,68 @@ before rollback so operators know which transitions lack an audit record.
 - Provider hashes are safe identifiers, not raw responses.
 - Schema version is asserted in tests.
 - Full CI passes with no disabled or deleted checks.
+
+## Operational examples
+
+The following examples describe expected records without prescribing a durable
+storage implementation. They are useful when comparing an incident report with
+the event stream or when writing a persistence adapter.
+
+### Successful mint
+
+```json
+{
+  "version": 1,
+  "actor": "issuer-42",
+  "action": "carbon.mint",
+  "target": "batch:batch_123",
+  "correlationId": "req_abc",
+  "outcome": "success",
+  "metadata": {
+    "batchId": "batch_123",
+    "holdingId": "holding_456",
+    "amount": 25
+  }
+}
+```
+
+### Failed provider call
+
+A failed provider call is represented by the provider error response and no
+successful lifecycle record. If a future implementation records failures, it
+must use `outcome: "failure"` and must never reuse the success action as a
+shortcut. This distinction prevents dashboards from counting an attempted mint
+as issued.
+
+### Correlation workflow
+
+1. The HTTP boundary obtains the request identifier.
+2. The service receives that identifier as an explicit option.
+3. The service records the identifier after the state transition.
+4. Support queries the identifier together with the affected target.
+5. The provider reference is compared with the domain record before reconciliation.
+
+If any step cannot preserve the identifier, the operation should fail closed or
+use the documented `unknown` value rather than inventing a second request ID.
+
+## Retention and export guidance
+
+Audit records can contain business identifiers, so exports must be access
+controlled and time-limited. Export jobs should:
+
+- select by a bounded time window and explicit actor, target, or correlation;
+- preserve the event ID and version when copying records;
+- keep the redacted metadata shape unchanged;
+- record who initiated the export in a separate administrative event; and
+- delete temporary export files using the platform's approved retention process.
+
+Consumers should tolerate additional fields in version 1, but should reject an
+unknown version until its redaction and authorization semantics are reviewed.
+
+## Backfill guidance
+
+Backfills must not manufacture historical success events. A migration may copy
+an existing event only when its original actor, target, timestamp, and outcome
+are known. Missing values must be marked as unavailable in migration metadata,
+and the migration itself should be traceable by a correlation ID. Re-running a
+backfill should be idempotent by source event ID.
