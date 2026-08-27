@@ -55,6 +55,9 @@ function buy({ batchId, buyer, quantity, idempotencyKey }) {
   const total = money.round2(subtotal + fee);
 
   const reservation = reservationService.reserve({ batch, owner: buyer, quantity, idempotencyKey });
+  if (reservation.status === reservationService.STATUS.SETTLED && reservation.result) {
+    return { ...reservation.result };
+  }
   let onChain;
   try {
     onChain = stellarService.transferCredits(batchId, seller, buyer, quantity);
@@ -62,8 +65,6 @@ function buy({ batchId, buyer, quantity, idempotencyKey }) {
     reservationService.release(reservation.id);
     throw error;
   }
-  reservationService.settle(reservation.id);
-
   batch.available -= quantity;
   holdingsService.debit(seller, batchId, quantity);
   holdingsService.credit(buyer, batchId, quantity);
@@ -73,7 +74,7 @@ function buy({ batchId, buyer, quantity, idempotencyKey }) {
     batch.status = BATCH_STATUS.SOLD_OUT;
   }
 
-  return {
+  const receipt = {
     batchId,
     seller,
     buyer,
@@ -87,6 +88,8 @@ function buy({ batchId, buyer, quantity, idempotencyKey }) {
     reservationId: reservation.id,
     settledAt: new Date().toISOString(),
   };
+  reservationService.settle(reservation.id, { result: receipt });
+  return receipt;
 }
 
 /**

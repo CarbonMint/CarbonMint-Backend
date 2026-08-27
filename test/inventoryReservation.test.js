@@ -48,6 +48,17 @@ test('settlement consumes a held reservation and cannot be repeated', () => {
   assert.throws(() => reservation.settle(held.id, { now: 1101 }), /no longer active/);
 });
 
+test('settlement can retain an idempotent result for safe client retries', () => {
+  const item = batch(10);
+  const held = reservation.reserve({ batch: item, owner: 'buyer-1', quantity: 4, idempotencyKey: 'retry-result', now: 1000 });
+  const result = { txHash: 'tx-1', quantity: 4, total: 42 };
+  const settled = reservation.settle(held.id, { now: 1100, result });
+  assert.deepEqual(settled.result, result);
+  const repeated = reservation.reserve({ batch: item, owner: 'buyer-1', quantity: 4, idempotencyKey: 'retry-result', now: 1101 });
+  assert.equal(repeated.status, reservation.STATUS.SETTLED);
+  assert.deepEqual(repeated.result, result);
+});
+
 test('explicit release makes inventory available again', () => {
   const item = batch(10);
   const held = reservation.reserve({ batch: item, owner: 'buyer-1', quantity: 6, now: 1000 });

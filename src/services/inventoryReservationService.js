@@ -108,11 +108,12 @@ function requireHeld(id, now = Date.now()) {
   return reservation;
 }
 
-function settle(id, { now } = {}) {
+function settle(id, { now, result } = {}) {
   const at = clock(now);
   const reservation = requireHeld(id, at);
   reservation.status = STATUS.SETTLED;
   reservation.settledAt = at;
+  if (result !== undefined) reservation.result = { ...result };
   return { ...reservation };
 }
 
