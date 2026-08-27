@@ -10,6 +10,7 @@ const marketRoutes = require('./marketRoutes');
 const retirementRoutes = require('./retirementRoutes');
 const holdingsRoutes = require('./holdingsRoutes');
 const registryRoutes = require('./registryRoutes');
+const auditRoutes = require('./auditRoutes');
 
 const router = express.Router();
 
@@ -24,6 +25,7 @@ router.use('/projects', projectRoutes);
 router.use('/batches', batchRoutes);
 router.use('/holdings', holdingsRoutes);
 router.use('/registry', registryRoutes);
+router.use('/audit', auditRoutes);
 router.use('/', marketRoutes);
 router.use('/', retirementRoutes);
 

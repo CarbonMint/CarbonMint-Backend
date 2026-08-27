@@ -8,6 +8,7 @@ const stats = require('../utils/stats');
 const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
+const auditService = require('./auditService');
 
 /**
  * Market service. Handles the marketplace surface: which batches are listed
@@ -33,7 +34,7 @@ function listListings(filter = {}) {
  * Execute a purchase. Moves credits from the batch owner to the buyer,
  * decrements availability and returns a settlement receipt.
  */
-function buy({ batchId, buyer, quantity }) {
+function buy({ batchId, buyer, quantity, actor, correlationId }) {
   const batch = batchService.getBatch(batchId);
 
   if (!batch.forSale) {
@@ -64,7 +65,7 @@ function buy({ batchId, buyer, quantity }) {
     batch.status = BATCH_STATUS.SOLD_OUT;
   }
 
-  return {
+  const receipt = {
     batchId,
     seller,
     buyer,
@@ -77,6 +78,14 @@ function buy({ batchId, buyer, quantity }) {
     txHash: onChain.txHash,
     settledAt: new Date().toISOString(),
   };
+  auditService.record({
+    actor,
+    action: 'market.buy',
+    target: batchId,
+    correlationId,
+    metadata: { seller, buyer, quantity, subtotal, fee, total, txHash: onChain.txHash },
+  });
+  return receipt;
 }
 
 /**

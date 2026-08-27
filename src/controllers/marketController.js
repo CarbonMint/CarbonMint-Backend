@@ -15,6 +15,8 @@ function buy(req, res) {
     batchId,
     buyer,
     quantity: Number(quantity),
+    actor: req.user && req.user.id,
+    correlationId: req.id,
   });
   res.status(201).json({ receipt });
 }
