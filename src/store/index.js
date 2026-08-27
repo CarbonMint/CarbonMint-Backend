@@ -11,6 +11,9 @@ const store = {
   projects: new Map(),
   batches: new Map(),
   certificates: new Map(),
+  // Canonical retirement request key => certificate id. This makes a retry of
+  // one retirement idempotent without conflating different certificates.
+  retirementKeys: new Map(),
   // holdings: user => Map(batchId => quantity)
   holdings: new Map(),
   // users: userId => { id, role }  (used by RBAC authenticate middleware)
@@ -21,6 +24,7 @@ function reset() {
   store.projects.clear();
   store.batches.clear();
   store.certificates.clear();
+  store.retirementKeys.clear();
   store.holdings.clear();
   store.users.clear();
 }
