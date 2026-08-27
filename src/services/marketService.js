@@ -9,6 +9,7 @@ const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
 const reservationService = require('./inventoryReservationService');
+const auditService = require('./auditService');
 
 /**
  * Market service. Handles the marketplace surface: which batches are listed
@@ -34,7 +35,7 @@ function listListings(filter = {}) {
  * Execute a purchase. Moves credits from the batch owner to the buyer,
  * decrements availability and returns a settlement receipt.
  */
-function buy({ batchId, buyer, quantity, idempotencyKey }) {
+function buy({ batchId, buyer, quantity, idempotencyKey, actor, correlationId }) {
   const batch = batchService.getBatch(batchId);
 
   if (!batch.forSale) {
@@ -63,7 +64,7 @@ function buy({ batchId, buyer, quantity, idempotencyKey }) {
     onChain = stellarService.transferCredits(batchId, seller, buyer, quantity);
   } catch (error) {
     reservationService.release(reservation.id);
-    throw error;
+    throw ApiError.fromProvider(error);
   }
   batch.available -= quantity;
   holdingsService.debit(seller, batchId, quantity);
@@ -89,6 +90,13 @@ function buy({ batchId, buyer, quantity, idempotencyKey }) {
     settledAt: new Date().toISOString(),
   };
   reservationService.settle(reservation.id, { result: receipt });
+  auditService.record({
+    actor,
+    action: 'market.buy',
+    target: batchId,
+    correlationId,
+    metadata: { seller, buyer, quantity, subtotal, fee, total, txHash: onChain.txHash },
+  });
   return receipt;
 }
 

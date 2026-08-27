@@ -1,6 +1,7 @@
 'use strict';
 
 const logger = require('../utils/logger');
+const { toPayload } = require('../utils/errorContract');
 
 /**
  * Central error handler. Translates thrown errors into a consistent JSON
@@ -19,14 +20,7 @@ function errorHandler(err, req, res, _next) {
     logger.warn(`${statusCode} on ${req.method} ${req.originalUrl}: ${err.message}`);
   }
 
-  res.status(statusCode).json({
-    error: {
-      message: err.message || 'Internal Server Error',
-      status: statusCode,
-      code: err.code || (statusCode >= 500 ? 'INTERNAL_ERROR' : 'ERROR'),
-      details: err.details,
-    },
-  });
+  res.status(statusCode).json({ error: toPayload(err, req.id) });
 }
 
 module.exports = errorHandler;

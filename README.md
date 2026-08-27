@@ -48,9 +48,14 @@ All endpoints are namespaced under `/api`.
 | GET    | `/api/holdings?user=`    | –             | A user's credit holdings                     |
 | GET    | `/api/holdings/summary?user=` | –        | Holdings aggregated by project               |
 | GET    | `/api/registry`          | –             | Aggregate supply analytics                   |
+| GET    | `/api/audit`             | `admin`       | Structured lifecycle audit events            |
 
 List endpoints accept filters: `/api/batches` supports `projectId`, `vintage`
 and `status`; `/api/listings` supports `projectId`.
+
+Audit history is queried by admins with optional `actor`, `target`,
+`correlationId`, `limit`, and `offset` filters. Events use a versioned schema
+and redact credentials and provider tokens before storage.
 
 ### Example requests
 

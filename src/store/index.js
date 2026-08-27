@@ -16,6 +16,7 @@ const store = {
   // users: userId => { id, role }  (used by RBAC authenticate middleware)
   users: new Map(),
   reservations: new Map(),
+  auditEvents: new Map(),
 };
 
 function reset() {
@@ -25,6 +26,7 @@ function reset() {
   store.holdings.clear();
   store.users.clear();
   store.reservations.clear();
+  store.auditEvents.clear();
 }
 
 /** Snapshot of collection sizes, handy for health checks and diagnostics. */
@@ -34,6 +36,7 @@ function counts() {
     batches: store.batches.size,
     certificates: store.certificates.size,
     accounts: store.holdings.size,
+    auditEvents: store.auditEvents.size,
   };
 }
 

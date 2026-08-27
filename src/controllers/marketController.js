@@ -16,6 +16,8 @@ function buy(req, res) {
     buyer,
     quantity: Number(quantity),
     idempotencyKey,
+    actor: req.user && req.user.id,
+    correlationId: req.id,
   });
   res.status(201).json({ receipt });
 }
