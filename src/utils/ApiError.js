@@ -19,14 +19,18 @@ const DEFAULT_CODES = {
   429: 'TOO_MANY_REQUESTS',
   503: 'SERVICE_UNAVAILABLE',
 };
+const { isRetryableStatus, normalizeProviderError } = require('./errorContract');
 
 class ApiError extends Error {
-  constructor(statusCode, message, details, code) {
+  constructor(statusCode, message, details, code, options = {}) {
     super(message);
     this.name = 'ApiError';
     this.statusCode = statusCode;
     this.details = details;
     this.code = code || DEFAULT_CODES[statusCode] || 'ERROR';
+    this.retryable = options.retryable === undefined
+      ? isRetryableStatus(statusCode)
+      : Boolean(options.retryable);
     this.isOperational = true;
     Error.captureStackTrace(this, this.constructor);
   }
@@ -65,6 +69,17 @@ class ApiError extends Error {
 
   static serviceUnavailable(message = 'Service unavailable') {
     return new ApiError(503, message);
+  }
+
+  static fromProvider(error) {
+    const normalized = normalizeProviderError(error);
+    return new ApiError(
+      normalized.statusCode,
+      normalized.message,
+      normalized.details,
+      normalized.code,
+      { retryable: normalized.retryable }
+    );
   }
 }
 

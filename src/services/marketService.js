@@ -54,7 +54,12 @@ function buy({ batchId, buyer, quantity, actor, correlationId }) {
   const fee = money.applyBps(subtotal, config.marketplace.platformFeeBps);
   const total = money.round2(subtotal + fee);
 
-  const onChain = stellarService.transferCredits(batchId, seller, buyer, quantity);
+  let onChain;
+  try {
+    onChain = stellarService.transferCredits(batchId, seller, buyer, quantity);
+  } catch (error) {
+    throw ApiError.fromProvider(error);
+  }
 
   batch.available -= quantity;
   holdingsService.debit(seller, batchId, quantity);
