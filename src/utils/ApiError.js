@@ -51,8 +51,8 @@ class ApiError extends Error {
     return new ApiError(404, message);
   }
 
-  static conflict(message) {
-    return new ApiError(409, message);
+  static conflict(message, code) {
+    return new ApiError(409, message, undefined, code);
   }
 
   static unprocessable(message, details) {
