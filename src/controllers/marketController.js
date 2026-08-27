@@ -10,11 +10,12 @@ function listListings(req, res) {
 
 /** POST /api/buy */
 function buy(req, res) {
-  const { batchId, buyer, quantity } = req.body;
+  const { batchId, buyer, quantity, idempotencyKey } = req.body;
   const receipt = marketService.buy({
     batchId,
     buyer,
     quantity: Number(quantity),
+    idempotencyKey,
     actor: req.user && req.user.id,
     correlationId: req.id,
   });

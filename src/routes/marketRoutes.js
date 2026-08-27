@@ -16,6 +16,7 @@ const buySchema = {
   buyer: { type: 'string', required: true },
   quantity: { type: 'integer', required: true, min: 1, max: MAX_BATCH_QUANTITY },
 };
+buySchema.idempotencyKey = { type: 'string', minLength: 8, maxLength: 128 };
 
 // GET /api/listings – public read
 router.get('/listings', asyncHandler(marketController.listListings));
