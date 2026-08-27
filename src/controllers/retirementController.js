@@ -16,6 +16,8 @@ function retire(req, res) {
     beneficiary,
     reason,
     retirementId,
+    actor: req.user && req.user.id,
+    correlationId: req.id,
   });
   res.status(201).json({ certificate });
 }

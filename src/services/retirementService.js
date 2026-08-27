@@ -59,6 +59,7 @@ function nextCorrectionId(certificate) {
   } while (certificate.corrections.some((correction) => correction.correctionId === id));
   return id;
 }
+const auditService = require('./auditService');
 
 /**
  * Retirement service. Retiring credits permanently burns them so they can no
@@ -89,7 +90,7 @@ function getCertificate(id, { user } = {}) {
  * simulates the on-chain burn, updates supply accounting and mints a
  * certificate.
  */
-function retire({ batchId, user, quantity, beneficiary, reason, retirementId }) {
+function retire({ batchId, user, quantity, beneficiary, reason, retirementId, actor, correlationId }) {
   const effectiveBeneficiary = beneficiary || user;
   const effectiveReason = reason || 'Voluntary carbon offset';
   const requestDigest = retirementRequestHash({
@@ -122,7 +123,12 @@ function retire({ batchId, user, quantity, beneficiary, reason, retirementId }) 
     );
   }
 
-  const onChain = stellarService.burnCredits(batchId, user, quantity);
+  let onChain;
+  try {
+    onChain = stellarService.burnCredits(batchId, user, quantity);
+  } catch (error) {
+    throw ApiError.fromProvider(error);
+  }
 
   holdingsService.debit(user, batchId, quantity);
   batch.available = Math.max(0, batch.available - quantity);
@@ -154,6 +160,13 @@ function retire({ batchId, user, quantity, beneficiary, reason, retirementId }) 
 
   store.certificates.set(id, certificate);
   store.retirementKeys.set(retirementKey, id);
+  auditService.record({
+    actor,
+    action: 'credits.retire',
+    target: batchId,
+    correlationId,
+    metadata: { certificateId: id, user, quantity, beneficiary, reason, txHash: onChain.txHash },
+  });
   return presentCertificate(certificate, user);
 }
 

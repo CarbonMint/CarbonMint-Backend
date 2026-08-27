@@ -8,6 +8,8 @@ const stats = require('../utils/stats');
 const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
+const reservationService = require('./inventoryReservationService');
+const auditService = require('./auditService');
 
 /**
  * Market service. Handles the marketplace surface: which batches are listed
@@ -23,7 +25,7 @@ function listListings(filter = {}) {
       projectId: b.projectId,
       projectName: b.projectName,
       vintage: b.vintage,
-      available: b.available,
+      available: reservationService.availableQuantity(b),
       pricePerCredit: b.pricePerCredit,
       seller: b.owner,
     }));
@@ -33,15 +35,15 @@ function listListings(filter = {}) {
  * Execute a purchase. Moves credits from the batch owner to the buyer,
  * decrements availability and returns a settlement receipt.
  */
-function buy({ batchId, buyer, quantity }) {
+function buy({ batchId, buyer, quantity, idempotencyKey, actor, correlationId }) {
   const batch = batchService.getBatch(batchId);
 
   if (!batch.forSale) {
     throw ApiError.conflict(`Batch ${batchId} is not listed for sale`);
   }
-  if (quantity > batch.available) {
+  if (quantity > reservationService.availableQuantity(batch)) {
     throw ApiError.badRequest(
-      `Requested ${quantity} credits but only ${batch.available} available`
+      `Requested ${quantity} credits but only ${reservationService.availableQuantity(batch)} available`
     );
   }
   if (buyer === batch.owner) {
@@ -53,8 +55,17 @@ function buy({ batchId, buyer, quantity }) {
   const fee = money.applyBps(subtotal, config.marketplace.platformFeeBps);
   const total = money.round2(subtotal + fee);
 
-  const onChain = stellarService.transferCredits(batchId, seller, buyer, quantity);
-
+  const reservation = reservationService.reserve({ batch, owner: buyer, quantity, idempotencyKey });
+  if (reservation.status === reservationService.STATUS.SETTLED && reservation.result) {
+    return { ...reservation.result };
+  }
+  let onChain;
+  try {
+    onChain = stellarService.transferCredits(batchId, seller, buyer, quantity);
+  } catch (error) {
+    reservationService.release(reservation.id);
+    throw ApiError.fromProvider(error);
+  }
   batch.available -= quantity;
   holdingsService.debit(seller, batchId, quantity);
   holdingsService.credit(buyer, batchId, quantity);
@@ -64,7 +75,7 @@ function buy({ batchId, buyer, quantity }) {
     batch.status = BATCH_STATUS.SOLD_OUT;
   }
 
-  return {
+  const receipt = {
     batchId,
     seller,
     buyer,
@@ -75,8 +86,18 @@ function buy({ batchId, buyer, quantity }) {
     total,
     currency: 'USDC',
     txHash: onChain.txHash,
+    reservationId: reservation.id,
     settledAt: new Date().toISOString(),
   };
+  reservationService.settle(reservation.id, { result: receipt });
+  auditService.record({
+    actor,
+    action: 'market.buy',
+    target: batchId,
+    correlationId,
+    metadata: { seller, buyer, quantity, subtotal, fee, total, txHash: onChain.txHash },
+  });
+  return receipt;
 }
 
 /**
