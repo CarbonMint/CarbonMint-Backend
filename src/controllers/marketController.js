@@ -11,10 +11,13 @@ function listListings(req, res) {
 /** POST /api/buy */
 function buy(req, res) {
   const { batchId, buyer, quantity } = req.body;
+  const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
+  if (!idempotencyKey) throw require('../utils/ApiError').badRequest('Idempotency-Key header is required');
   const receipt = marketService.buy({
     batchId,
     buyer,
     quantity: Number(quantity),
+    idempotencyKey,
   });
   res.status(201).json({ receipt });
 }

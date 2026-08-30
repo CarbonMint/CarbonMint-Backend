@@ -7,6 +7,7 @@ const { prefixedId } = require('../utils/ids');
 const projectService = require('./projectService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
+const { executeIdempotent } = require('./idempotencyService');
 
 /**
  * Batch service. A batch represents a tokenized quantity of carbon credits
@@ -38,7 +39,18 @@ function getBatch(id) {
  * Mint a new credit batch. Validates the backing project, simulates the
  * on-chain mint, records the batch and credits the issuer's holdings.
  */
-function mintBatch({ projectId, quantity, vintage, owner, pricePerCredit }) {
+function mintBatch({ projectId, quantity, vintage, owner, pricePerCredit, idempotencyKey }) {
+  if (!idempotencyKey) return mintBatchMutation({ projectId, quantity, vintage, owner, pricePerCredit });
+  return executeIdempotent({
+    actor: owner,
+    command: 'mint',
+    key: idempotencyKey,
+    payload: { projectId, quantity, vintage, owner, pricePerCredit },
+    execute: () => mintBatchMutation({ projectId, quantity, vintage, owner, pricePerCredit }),
+  });
+}
+
+function mintBatchMutation({ projectId, quantity, vintage, owner, pricePerCredit }) {
   const project = projectService.getProject(projectId);
 
   if (!Number.isInteger(quantity) || quantity <= 0) {

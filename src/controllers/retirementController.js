@@ -4,13 +4,17 @@ const retirementService = require('../services/retirementService');
 
 /** POST /api/retire */
 function retire(req, res) {
-  const { batchId, user, quantity, beneficiary, reason } = req.body;
+  const { batchId, user, quantity, beneficiary, reason, retirementId } = req.body;
+  const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
+  if (!idempotencyKey && !retirementId) throw require('../utils/ApiError').badRequest('Idempotency-Key header is required');
   const certificate = retirementService.retire({
     batchId,
     user,
     quantity: Number(quantity),
     beneficiary,
     reason,
+    retirementId,
+    idempotencyKey,
   });
   res.status(201).json({ certificate });
 }

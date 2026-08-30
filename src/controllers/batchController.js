@@ -24,12 +24,15 @@ function getBatch(req, res) {
 /** POST /api/batches */
 function createBatch(req, res) {
   const { projectId, quantity, vintage, owner, pricePerCredit } = req.body;
+  const idempotencyKey = req.get('Idempotency-Key') || req.body.idempotencyKey;
+  if (!idempotencyKey) throw require('../utils/ApiError').badRequest('Idempotency-Key header is required');
   const batch = batchService.mintBatch({
     projectId,
     quantity: Number(quantity),
     vintage: Number(vintage),
     owner,
     pricePerCredit: pricePerCredit != null ? Number(pricePerCredit) : null,
+    idempotencyKey,
   });
   res.status(201).json({ batch });
 }

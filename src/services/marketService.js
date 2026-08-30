@@ -8,6 +8,7 @@ const stats = require('../utils/stats');
 const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
+const { executeIdempotent } = require('./idempotencyService');
 
 /**
  * Market service. Handles the marketplace surface: which batches are listed
@@ -33,7 +34,18 @@ function listListings(filter = {}) {
  * Execute a purchase. Moves credits from the batch owner to the buyer,
  * decrements availability and returns a settlement receipt.
  */
-function buy({ batchId, buyer, quantity }) {
+function buy({ batchId, buyer, quantity, idempotencyKey }) {
+  if (!idempotencyKey) return buyMutation({ batchId, buyer, quantity });
+  return executeIdempotent({
+    actor: buyer,
+    command: 'buy',
+    key: idempotencyKey,
+    payload: { batchId, buyer, quantity },
+    execute: () => buyMutation({ batchId, buyer, quantity }),
+  });
+}
+
+function buyMutation({ batchId, buyer, quantity }) {
   const batch = batchService.getBatch(batchId);
 
   if (!batch.forSale) {

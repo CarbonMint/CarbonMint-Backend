@@ -7,6 +7,7 @@ const { prefixedId } = require('../utils/ids');
 const batchService = require('./batchService');
 const stellarService = require('./stellarService');
 const holdingsService = require('./holdingsService');
+const { executeIdempotent } = require('./idempotencyService');
 
 /**
  * Retirement service. Retiring credits permanently burns them so they can no
@@ -37,7 +38,21 @@ function getCertificate(id) {
  * simulates the on-chain burn, updates supply accounting and mints a
  * certificate.
  */
-function retire({ batchId, user, quantity, beneficiary, reason }) {
+function retire({ batchId, user, quantity, beneficiary, reason, retirementId, idempotencyKey }) {
+  const effectiveKey = idempotencyKey || retirementId;
+  if (effectiveKey) {
+    return executeIdempotent({
+      actor: user,
+      command: 'retire',
+      key: effectiveKey,
+      payload: { batchId, user, quantity, beneficiary, reason },
+      execute: () => retireMutation({ batchId, user, quantity, beneficiary, reason, retirementId }),
+    });
+  }
+  return retireMutation({ batchId, user, quantity, beneficiary, reason, retirementId });
+}
+
+function retireMutation({ batchId, user, quantity, beneficiary, reason, retirementId }) {
   const batch = batchService.getBatch(batchId);
   const balance = holdingsService.getBalance(user, batchId);
 
@@ -72,6 +87,7 @@ function retire({ batchId, user, quantity, beneficiary, reason }) {
     txHash: onChain.txHash,
     retiredAt: new Date().toISOString(),
   };
+
 
   store.certificates.set(id, certificate);
   return certificate;

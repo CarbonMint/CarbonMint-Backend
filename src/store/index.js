@@ -11,6 +11,10 @@ const store = {
   projects: new Map(),
   batches: new Map(),
   certificates: new Map(),
+  // actor + command + client key => terminal mutation result and fingerprint.
+  idempotencyRecords: new Map(),
+  // Minimal audit trail used by mutation services and exposed to tests/health.
+  auditEvents: [],
   // holdings: user => Map(batchId => quantity)
   holdings: new Map(),
   // users: userId => { id, role }  (used by RBAC authenticate middleware)
@@ -21,6 +25,8 @@ function reset() {
   store.projects.clear();
   store.batches.clear();
   store.certificates.clear();
+  store.idempotencyRecords.clear();
+  store.auditEvents.length = 0;
   store.holdings.clear();
   store.users.clear();
 }
@@ -32,6 +38,8 @@ function counts() {
     batches: store.batches.size,
     certificates: store.certificates.size,
     accounts: store.holdings.size,
+    idempotencyRecords: store.idempotencyRecords.size,
+    auditEvents: store.auditEvents.length,
   };
 }
 
