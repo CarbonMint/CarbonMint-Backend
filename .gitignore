@@ -2,8 +2,6 @@
 node_modules/
 
 # Environment
-.env
-.env.local
 
 # Logs
 logs/
@@ -14,8 +12,8 @@ npm-debug.log*
 .DS_Store
 
 # Editor
-.vscode/
 .idea/
 
 # Coverage
 coverage/
+config.bat
